@@ -1,5 +1,4 @@
-// backend-fuseki.js corregido usando express.Router()
-
+require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 const cors = require("cors");
@@ -8,9 +7,16 @@ const bcrypt = require("bcryptjs");
 const db = require("./db");
 const axios = require("axios");
 const path = require("path");
+
 const FUSEKI_URL = "http://localhost:3030/ProyectoFinalSport";
 
-router.use(cors());
+router.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    credentials: true,
+  })
+);
+
 router.use(bodyParser.json());
 
 router.use(

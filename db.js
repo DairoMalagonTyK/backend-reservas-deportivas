@@ -1,9 +1,9 @@
 const mysql = require("mysql2/promise");
 
 const db = mysql.createPool({
-  host: "localhost",
+  host: "db-ssid-usuarios.c5su424kak84.us-east-2.rds.amazonaws.com",
   user: "root",
-  password: "ROOT",
+  password: "dairomalagon",
   database: "ssid_usuarios",
 });
 
