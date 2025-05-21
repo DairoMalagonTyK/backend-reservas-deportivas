@@ -333,10 +333,6 @@ router.get("/mis-solicitudes", async (req, res) => {
   }
 });
 
-router.listen(PORT, () => {
-  console.log(`✅ Servidor backend corriendo en http://localhost:${PORT}`);
-});
-
 router.get("/canchas", async (req, res) => {
   const query = `
     PREFIX : <http://www.semanticweb.org/deporte/ontologia#>
