@@ -10,9 +10,7 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // ⛓️ Importar rutas o lógica aquí
-const backendFuseki = require("./backend-fuseki");
-app.use("/api", backendFuseki);
-
+require("./backend-fuseki"); // ✅ Solo lo importas, sin usar app.use
 // 🟢 Ruta de prueba
 app.get("/", (req, res) => res.send("API de Reservas Deportivas"));
 
