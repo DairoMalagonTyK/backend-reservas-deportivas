@@ -953,7 +953,7 @@ router.get("/validar-solicitud-usuario", async (req, res) => {
   }
 });
 
-reouter.post("/guardar-observacion", async (req, res) => {
+router.post("/guardar-observacion", async (req, res) => {
   const { reservaId, observacion } = req.body;
 
   const reservaIRI = `:${reservaId}`;
