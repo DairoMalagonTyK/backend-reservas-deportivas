@@ -19,92 +19,51 @@ router.use(
 );
 
 // REGISTRO
-router.post("/solicitudes", async (req, res) => {
-  let {
-    fecha,
-    horaInicio,
-    horaFin,
-    cancha,
-    implementos,
-    descripcion,
-    usuarioCorreo,
-  } = req.body;
+router.post("/register", async (req, res) => {
+  const { nombre, correo, contrasenia, programaNombre, rolNombre } = req.body;
 
-  // ✅ Asegurarse que las horas tengan segundos
-  if (horaInicio.length === 5) horaInicio += ":00";
-  if (horaFin.length === 5) horaFin += ":00";
-
-  // ✅ Usar directamente la fecha ya formateada (YYYY-MM-DD)
-  const fechaFinal = fecha.trim();
-
-  const timestamp = Date.now();
-  const solicitudId = `Solicitud_${timestamp}`;
-
-  let insertQuery = `
-    PREFIX : <http://www.semanticweb.org/deporte/ontologia#>
-    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-    INSERT DATA {
-      :${solicitudId} a :Solicitud ;
-        :fechaSolicitud "${fechaFinal}"^^xsd:date ;
-        :estadoSolicitud "pendiente" ;
-        :horaInicio "${horaInicio}"^^xsd:time ;
-        :horaFin "${horaFin}"^^xsd:time ;
-        :motivoSolicitud "${descripcion.replace(/"/g, "'")}" ;
-        :haceSolicitud ?usuario ;
-        :tieneCancha :${cancha} ;
-  `;
-
-  implementos.forEach((i) => {
-    insertQuery += `\n        :tieneImplemento :${i} ;`;
-  });
-
-  insertQuery = insertQuery.trim().replace(/;$/, ".") + "\n}";
-
-  const getUsuarioQuery = `
-    PREFIX : <http://www.semanticweb.org/deporte/ontologia#>
-    SELECT ?usuario WHERE {
-      ?usuario a :Usuario ;
-              :correo "${usuarioCorreo}" .
-    }
-  `;
+  if (!nombre || !correo || !contrasenia || !programaNombre || !rolNombre) {
+    return res.status(400).json({
+      success: false,
+      message: "Faltan datos para registrar al usuario.",
+    });
+  }
 
   try {
-    const userRes = await axios.post(
-      `${FUSEKI_URL}/query`,
-      `query=${encodeURIComponent(getUsuarioQuery)}`,
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          Accept: "application/sparql-results+json",
-        },
-      }
+    // Verifica si ya existe el usuario
+    const [usuarios] = await db.execute(
+      "SELECT * FROM usuario WHERE Email = ?",
+      [correo]
     );
 
-    const bindings = userRes.data.results.bindings;
-    if (bindings.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Usuario no encontrado" });
+    if (usuarios.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Ya existe un usuario con ese correo.",
+      });
     }
 
-    const usuarioURI = bindings[0].usuario.value;
-    insertQuery = insertQuery.replace("?usuario", `<${usuarioURI}>`);
+    // Encripta la contraseña
+    const hashedPassword = await bcrypt.hash(contrasenia, 10);
 
-    await axios.post(
-      `${FUSEKI_URL}/update`,
-      `update=${encodeURIComponent(insertQuery)}`,
-      {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      }
+    // Inserta el nuevo usuario
+    await db.execute(
+      `
+      INSERT INTO usuario (NombreUsuario, Email, Password, Rol, Estado)
+      VALUES (?, ?, ?, ?, 'Activo')
+      `,
+      [nombre, correo, hashedPassword, rolNombre]
     );
 
-    res.json({ success: true, message: "Solicitud registrada con éxito" });
+    return res.json({
+      success: true,
+      message: "Usuario registrado correctamente.",
+    });
   } catch (error) {
-    console.error("Error al guardar solicitud:", error.message);
+    console.error("❌ Error en /register:", error.message);
     res.status(500).json({
       success: false,
-      message: "Error al registrar solicitud",
+      message: "Error al registrar el usuario.",
     });
   }
 });
