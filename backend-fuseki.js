@@ -1,23 +1,25 @@
+// backend-fuseki.js corregido usando express.Router()
+
 const express = require("express");
-const app = express(); // ✅ esta sí la dejas
+const router = express.Router();
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const bcrypt = require("bcryptjs");
-const db = require("./db"); // ✅ bien así si estás exportando con module.exports
+const db = require("./db");
 const axios = require("axios");
 const path = require("path");
-
 const FUSEKI_URL = "http://localhost:3030/ProyectoFinalSport";
-const PORT = 3001;
 
-app.use(cors());
-app.use(bodyParser.json());
+router.use(cors());
+router.use(bodyParser.json());
 
-// Si estás usando imágenes locales:
-app.use("/imagenes", express.static(path.join(__dirname, "uploads/canchas")));
+router.use(
+  "/imagenes",
+  express.static(path.join(__dirname, "uploads/canchas"))
+);
 
 // REGISTRO
-app.post("/api/solicitudes", async (req, res) => {
+router.post("/solicitudes", async (req, res) => {
   let {
     fecha,
     horaInicio,
@@ -108,7 +110,7 @@ app.post("/api/solicitudes", async (req, res) => {
 });
 
 // LOGIN
-app.post("/api/login", async (req, res) => {
+router.post("/login", async (req, res) => {
   const { correo, contrasenia } = req.body;
   try {
     const [rows] = await db.execute(
@@ -144,7 +146,7 @@ app.post("/api/login", async (req, res) => {
 });
 
 // DELETE USUARIO
-app.delete("/api/usuario", async (req, res) => {
+router.delete("/usuario", async (req, res) => {
   const { correo } = req.body;
 
   const deleteQuery = `
@@ -179,7 +181,7 @@ app.delete("/api/usuario", async (req, res) => {
 });
 
 // GUARDAR SOLICITUD
-app.post("/api/solicitudes", async (req, res) => {
+router.post("/solicitudes", async (req, res) => {
   const {
     fecha,
     horaInicio,
@@ -280,7 +282,7 @@ app.post("/api/solicitudes", async (req, res) => {
 });
 
 // OBTENER SOLICITUDES DEL USUARIO
-app.get("/api/mis-solicitudes", async (req, res) => {
+router.get("/mis-solicitudes", async (req, res) => {
   const { correo } = req.query;
 
   const query = `
@@ -331,11 +333,11 @@ app.get("/api/mis-solicitudes", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+router.listen(PORT, () => {
   console.log(`✅ Servidor backend corriendo en http://localhost:${PORT}`);
 });
 
-app.get("/api/canchas", async (req, res) => {
+router.get("/canchas", async (req, res) => {
   const query = `
     PREFIX : <http://www.semanticweb.org/deporte/ontologia#>
     SELECT ?cancha ?nombre ?tipo ?estado WHERE {
@@ -387,7 +389,7 @@ app.get("/api/canchas", async (req, res) => {
   }
 });
 
-app.get("/api/implementos", async (req, res) => {
+router.get("/implementos", async (req, res) => {
   const { cancha } = req.query;
 
   const query = `
@@ -423,7 +425,7 @@ app.get("/api/implementos", async (req, res) => {
   }
 });
 
-app.get("/api/canchas-con-implementos", async (req, res) => {
+router.get("/canchas-con-implementos", async (req, res) => {
   const query = `
   PREFIX : <http://www.semanticweb.org/deporte/ontologia#>
   SELECT ?cancha ?nombreCancha ?implemento ?nombreImplemento WHERE {
@@ -486,7 +488,7 @@ app.get("/api/canchas-con-implementos", async (req, res) => {
   }
 });
 
-app.get("/api/solicitudes-pendientes", async (req, res) => {
+router.get("/solicitudes-pendientes", async (req, res) => {
   const query = `
     PREFIX : <http://www.semanticweb.org/deporte/ontologia#>
     SELECT ?solicitud ?fecha ?horaInicio ?horaFin ?estado ?canchaNombre ?descripcion ?usuarioCorreo ?usuarioNombre WHERE {
@@ -538,7 +540,7 @@ app.get("/api/solicitudes-pendientes", async (req, res) => {
   }
 });
 
-app.post("/api/aceptar-solicitud/:id", async (req, res) => {
+router.post("/api/aceptar-solicitud/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -557,7 +559,7 @@ app.post("/api/aceptar-solicitud/:id", async (req, res) => {
   }
 });
 
-app.post("/api/reservas", async (req, res) => {
+router.post("/api/reservas", async (req, res) => {
   const { solicitudId } = req.body;
 
   const reservaID = `Reserva_${Date.now()}`;
@@ -613,7 +615,7 @@ app.post("/api/reservas", async (req, res) => {
   }
 });
 
-app.post("/api/rechazar-solicitud/:id", async (req, res) => {
+router.post("/rechazar-solicitud/:id", async (req, res) => {
   const { id } = req.params;
   const solicitudIRI = `:Solicitud_${id}`;
 
@@ -643,7 +645,7 @@ app.post("/api/rechazar-solicitud/:id", async (req, res) => {
   }
 });
 
-app.get("/api/usuario-detalle", async (req, res) => {
+router.get("/usuario-detalle", async (req, res) => {
   const correo = req.query.correo;
   const query = `
     PREFIX : <http://www.semanticweb.org/deporte/ontologia#>
@@ -690,7 +692,7 @@ app.get("/api/usuario-detalle", async (req, res) => {
   }
 });
 
-app.get("/api/solicitudes-todas", async (req, res) => {
+router.get("/solicitudes-todas", async (req, res) => {
   const query = `
     PREFIX : <http://www.semanticweb.org/deporte/ontologia#>
     SELECT ?solicitud ?fecha ?horaInicio ?horaFin ?estado ?canchaNombre ?descripcion ?usuarioCorreo ?usuarioNombre WHERE {
@@ -742,7 +744,7 @@ app.get("/api/solicitudes-todas", async (req, res) => {
   }
 });
 
-app.get("/api/reservas", async (req, res) => {
+reouter.get("/reservas", async (req, res) => {
   const query = `
     PREFIX : <http://www.semanticweb.org/deporte/ontologia#>
     SELECT ?reserva ?fecha ?horaInicio ?horaFin ?canchaNombre ?usuarioCorreo ?usuarioNombre WHERE {
@@ -789,7 +791,7 @@ app.get("/api/reservas", async (req, res) => {
   }
 });
 
-app.get("/api/reservas-usuario", async (req, res) => {
+router.get("/reservas-usuario", async (req, res) => {
   const correo = req.query.correo;
 
   const query = `
@@ -839,7 +841,7 @@ app.get("/api/reservas-usuario", async (req, res) => {
   }
 });
 
-app.get("/api/validar-disponibilidad", async (req, res) => {
+router.get("/validar-disponibilidad", async (req, res) => {
   let { fecha, horaInicio, horaFin, cancha } = req.query;
 
   if (!fecha || !horaInicio || !horaFin || !cancha) {
@@ -895,7 +897,7 @@ app.get("/api/validar-disponibilidad", async (req, res) => {
   }
 });
 
-app.get("/api/validar-solicitud-usuario", async (req, res) => {
+router.get("/validar-solicitud-usuario", async (req, res) => {
   const { correo, fecha, horaInicio, horaFin, cancha } = req.query;
 
   if (!correo || !fecha || !horaInicio || !horaFin || !cancha) {
@@ -955,7 +957,7 @@ app.get("/api/validar-solicitud-usuario", async (req, res) => {
   }
 });
 
-app.post("/api/guardar-observacion", async (req, res) => {
+reouter.post("/guardar-observacion", async (req, res) => {
   const { reservaId, observacion } = req.body;
 
   const reservaIRI = `:${reservaId}`;
@@ -990,7 +992,7 @@ app.post("/api/guardar-observacion", async (req, res) => {
   }
 });
 
-app.get("/api/usuarios", async (req, res) => {
+router.get("/usuarios", async (req, res) => {
   const query = `
     PREFIX : <http://www.semanticweb.org/deporte/ontologia#>
     SELECT ?usuario ?correo ?estado ?nombre ?programa ?rol WHERE {
@@ -1036,7 +1038,7 @@ app.get("/api/usuarios", async (req, res) => {
   }
 });
 
-app.post("/api/crear-cancha", async (req, res) => {
+router.post("/crear-cancha", async (req, res) => {
   const { nombre, tipo, estado } = req.body;
 
   if (!nombre || !tipo || !estado) {
@@ -1071,7 +1073,7 @@ app.post("/api/crear-cancha", async (req, res) => {
   }
 });
 
-app.put("/api/editar-cancha/:id", async (req, res) => {
+router.put("/editar-cancha/:id", async (req, res) => {
   const { id } = req.params;
   const { nombre, tipo, estado } = req.body;
 
@@ -1117,7 +1119,7 @@ app.put("/api/editar-cancha/:id", async (req, res) => {
 });
 
 // GET /api/canchas-y-sus-implementos
-app.get("/api/canchas-y-sus-implementos", async (req, res) => {
+router.get("/canchas-y-sus-implementos", async (req, res) => {
   const query = `
     PREFIX : <http://www.semanticweb.org/deporte/ontologia#>
     SELECT ?cancha ?nombre ?tipo ?estado ?implemento ?nombreImplemento ?cantidad WHERE {
@@ -1179,7 +1181,7 @@ app.get("/api/canchas-y-sus-implementos", async (req, res) => {
   }
 });
 
-app.post("/api/crear-implemento", async (req, res) => {
+router.post("/crear-implemento", async (req, res) => {
   const { nombre, marca, cantidad, canchaId } = req.body;
 
   if (!nombre || !marca || !cantidad || !canchaId) {
@@ -1217,7 +1219,7 @@ app.post("/api/crear-implemento", async (req, res) => {
   }
 });
 
-app.put("/api/editar-implemento/:id", async (req, res) => {
+router.put("/editar-implemento/:id", async (req, res) => {
   const { id } = req.params;
   const { nombre, marca, cantidad } = req.body;
 
@@ -1260,3 +1262,5 @@ app.put("/api/editar-implemento/:id", async (req, res) => {
       .json({ success: false, message: "Error al actualizar implemento" });
   }
 });
+
+module.exports = router;
