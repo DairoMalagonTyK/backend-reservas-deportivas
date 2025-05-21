@@ -740,7 +740,7 @@ router.get("/solicitudes-todas", async (req, res) => {
   }
 });
 
-reouter.get("/reservas", async (req, res) => {
+router.get("/reservas", async (req, res) => {
   const query = `
     PREFIX : <http://www.semanticweb.org/deporte/ontologia#>
     SELECT ?reserva ?fecha ?horaInicio ?horaFin ?canchaNombre ?usuarioCorreo ?usuarioNombre WHERE {
